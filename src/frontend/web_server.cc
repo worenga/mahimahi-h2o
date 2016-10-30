@@ -38,10 +38,11 @@ WebServer::WebServer( const Address & addr, const string & working_directory, co
     config_file_.write( "        ocsp-update-interval: 0\n");
     config_file_.write( "    paths:\n");
     config_file_.write( "      \"/\":\n");
-    config_file_.write( "        mruby.handler: |\n");
-    config_file_.write( "          Proc.new do |env|\n");
-    config_file_.write( "            [200, {'content-type' => 'text/plain'}, [\"Peter!\\n\"]]\n");
-    config_file_.write( "          end\n");
+    config_file_.write( "        fastcgi.spawn: \"exec /home/bewo/Projects/mahimahi/flup/fluptest.py\"\n");
+//    config_file_.write( "        mruby.handler: |\n");
+//    config_file_.write( "          Proc.new do |env|\n");
+//    config_file_.write( "            [200, {'content-type' => 'text/plain'}, [\"Peter!\\n\"]]\n");
+//    config_file_.write( "          end\n");
     //run( {"/sbin/ifconfig"} );
     //run( {"/sbin/setcap","'cap_net_bind_service=+ep'","/usr/local/bin/h2o"} );
     //run( {"/bin/cat", config_file_.name()} );
