@@ -7,12 +7,15 @@
 
 #include "temp_file.hh"
 #include "address.hh"
+#include "child_process.hh"
 
 class WebServer
 {
 private:
     /* each apache instance needs unique configuration file, error/access logs, and pid file */
     TempFile config_file_;
+    std::string pid_file_;
+    ChildProcess* h2osrv;
 
     bool moved_away_;
 
