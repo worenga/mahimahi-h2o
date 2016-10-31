@@ -105,11 +105,14 @@ void HTTPProxy::handle_tcp( HTTPBackingStore & backing_store )
                 }
 
                 /* handle TLS */
-                SecureSocket tls_server( client_context_.new_secure_socket( move( server ) ) );
-                tls_server.connect();
-
-                SecureSocket tls_client( server_context_.new_secure_socket( move( client ) ) );
+                SSLContext context_for_client(SERVER);
+                context_for_client.register_server_sni_callback();
+                SecureSocket tls_client( context_for_client.new_secure_socket( move( client ) ) );
                 tls_client.accept();
+
+                SecureSocket tls_server( client_context_.new_secure_socket( move( server ) ) );
+                tls_server.set_sni_servername_to_request(context_for_client.get_requested_servername());
+                tls_server.connect();
 
                 loop( tls_server, tls_client, backing_store );
             } catch ( const exception & e ) {
