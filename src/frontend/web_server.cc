@@ -27,6 +27,7 @@ WebServer::WebServer( const Address & addr, const string & working_directory, co
     config_file_.write( "setenv:\n" );
     config_file_.write( "  WORKING_DIR: \""+working_directory+"\"\n" );
     config_file_.write( "  RECORDING_DIR: \""+record_path+"\"\n" );
+    config_file_.write( "  REPLAYSERVER_FN: \""+string(REPLAYSERVER)+"\"\n" );
     config_file_.write( "hosts:\n" );
     config_file_.write( std::string("  \"") + addr.str() + std::string("\":\n") );
     config_file_.write( "    listen:\n");

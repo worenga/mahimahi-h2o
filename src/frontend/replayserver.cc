@@ -45,6 +45,7 @@ bool header_match( const string & env_var_name,
         return saved_request.get_header_value( header_name ) == string( env_value );
     }
 
+
     /* case 3: one exists but the other doesn't (failure) */
     return false;
 }
@@ -119,9 +120,11 @@ int main( void )
         const vector< string > files = list_directory_contents( recording_directory );
 
         unsigned int best_score = 0;
-        MahimahiProtobufs::RequestResponse best_match;
+        std::vector<MahimahiProtobufs::RequestResponse> best_matches;
 
+        int num_files = 0;
         for ( const auto & filename : files ) {
+            num_files++;
             FileDescriptor fd( SystemCall( "open", open( filename.c_str(), O_RDONLY ) ) );
             MahimahiProtobufs::RequestResponse current_record;
             if ( not current_record.ParseFromFileDescriptor( fd.fd_num() ) ) {
@@ -130,18 +133,27 @@ int main( void )
 
             unsigned int score = match_score( current_record, request_line, is_https );
             if ( score > best_score ) {
-                best_match = current_record;
+                best_matches.clear();
+                best_matches.push_back(current_record);
                 best_score = score;
+            }
+            else if (score == best_score)
+            {
+                best_matches.push_back(current_record);
             }
         }
 
         if ( best_score > 0 ) { /* give client the best match */
-            cout << HTTPResponse( best_match.response() ).str();
+            //cout << "HTTP/1.1 404 Not Found" << CRLF;
+            //cout << "Content-Type: text/plain" << CRLF << CRLF;
+            //cout << "MATCHES: " << best_matches.size() << std::endl;
+            cout << HTTPResponse( best_matches[0].response() ).str();
             return EXIT_SUCCESS;
         } else {                /* no acceptable matches for request */
             cout << "HTTP/1.1 404 Not Found" << CRLF;
             cout << "Content-Type: text/plain" << CRLF << CRLF;
             cout << "replayserver: could not find a match for " << request_line << CRLF;
+            cout << "Files considered:  " << num_files << CRLF;
             return EXIT_FAILURE;
         }
     } catch ( const exception & e ) {
