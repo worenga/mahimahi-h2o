@@ -112,16 +112,11 @@ def app(environ, start_response):
             hdrlist.append((key, headers[key]))
 
     if is_chunked:
-        if passed_env['REQUEST_METHOD'] == "HEAD" or str(response_code).startswith("1") or response_code == "204" or response_code == "304" or response_code == "302":
-            hdrlist.append(('transfer-encoding','chunked'))
-            start_response(status_cleaned, hdrlist)
-            yield response_body
-        else:
-            decoded = StringIO()
-            start_response(status_cleaned, hdrlist)
-            for chunk in decode(StringIO(response_body)):
-                decoded.write(chunk)
-            yield decoded.getvalue()
+        decoded = StringIO()
+        start_response(status_cleaned, hdrlist)
+        for chunk in decode(StringIO(response_body)):
+            decoded.write(chunk)
+        yield decoded.getvalue()
     else:
         start_response(status_cleaned, hdrlist)
         yield response_body
