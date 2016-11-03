@@ -3,6 +3,7 @@
 *.lo
 *.la
 *.slo
+*.pyc
 .deps
 Makefile
 Makefile.in
