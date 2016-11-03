@@ -42,8 +42,8 @@ int main( int argc, char *argv[] )
 
         check_requirements( argc, argv );
 
-        if ( argc < 2 ) {
-            throw runtime_error( "Usage: " + string( argv[ 0 ] ) + " directory [command...]" );
+        if ( argc < 3 ) {
+            throw runtime_error( "Usage: " + string( argv[ 0 ] ) + " directory push_strategy_file [command...]" );
         }
 
         /* clean directory name */
@@ -62,6 +62,12 @@ int main( int argc, char *argv[] )
         const string working_directory { get_working_directory() };
 
 
+        string push_strategy_file = argv[ 2 ];
+
+        if ( push_strategy_file.empty() ) {
+            throw runtime_error( string( argv[ 0 ] ) + ": push_strategy_file name must be non-empty" );
+        }
+
         /* chdir to result of getcwd just in case */
         SystemCall( "chdir", chdir( working_directory.c_str() ) );
 
@@ -77,11 +83,11 @@ int main( int argc, char *argv[] )
 
         /* what command will we run inside the container? */
         vector< string > command;
-        if ( argc == 2 ) {
+        if ( argc == 3 ) {
             command.push_back( shell_path() );
         } else {
 
-            for ( int i = 2; i < argc; i++ ) {
+            for ( int i = 3; i < argc; i++ ) {
                 command.push_back( argv[ i ] );
             }
         }
@@ -132,7 +138,7 @@ int main( int argc, char *argv[] )
         /* set up web servers */
         vector< WebServer > servers;
         for ( const auto ip_port : unique_ip_and_port ) {
-            servers.emplace_back( ip_port, working_directory, directory );
+            servers.emplace_back( ip_port, working_directory, directory, push_strategy_file );
         }
 
         /* set up DNS server */

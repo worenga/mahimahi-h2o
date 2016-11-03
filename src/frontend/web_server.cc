@@ -14,7 +14,7 @@
 
 using namespace std;
 
-WebServer::WebServer( const Address & addr, const string & working_directory, const string & record_path )
+WebServer::WebServer( const Address & addr, const string & working_directory, const string & record_path, const std::string & push_strategy_file )
     : config_file_( "/tmp/replayshell_h2o_config" ),pid_file_("/tmp/replayshell_h2o_pidfile"),
       h2osrv(nullptr),
       moved_away_( false )
@@ -39,7 +39,7 @@ WebServer::WebServer( const Address & addr, const string & working_directory, co
     config_file_.write( "        ocsp-update-interval: 0\n");
     config_file_.write( "    paths:\n");
     config_file_.write( "      \"/\":\n");
-    config_file_.write( "        fastcgi.spawn: \"exec /home/bewo/Projects/mahimahi/flup/fluptest.py\"\n");
+    config_file_.write( "        fastcgi.spawn: \"PUSH_STRATEGY_FILE='"+push_strategy_file+"' exec /home/bewo/Projects/mahimahi/fcgi/FcgiHandler.py\"\n");
 //    config_file_.write( "        mruby.handler: |\n");
 //    config_file_.write( "          Proc.new do |env|\n");
 //    config_file_.write( "            [200, {'content-type' => 'text/plain'}, [\"Peter!\\n\"]]\n");
