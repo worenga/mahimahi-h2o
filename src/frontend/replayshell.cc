@@ -4,6 +4,7 @@
 #include <string>
 #include <net/route.h>
 #include <fcntl.h>
+#include <cstdlib>
 
 #include "util.hh"
 #include "netdevice.hh"
@@ -16,6 +17,7 @@
 #include "dns_server.hh"
 #include "exception.hh"
 #include "network_namespace.hh"
+
 
 #include "http_record.pb.h"
 
@@ -37,6 +39,10 @@ int main( int argc, char *argv[] )
 {
     try {
         /* clear environment */
+
+        std::cout << "MAHIMAHI_ROOT: " <<  ::getenv("MAHIMAHI_ROOT") << std::endl;
+        std::string mahimahi_root = std::getenv("MAHIMAHI_ROOT");
+
         char **user_environment = environ;
         environ = nullptr;
 
@@ -138,7 +144,7 @@ int main( int argc, char *argv[] )
         /* set up web servers */
         vector< WebServer > servers;
         for ( const auto ip_port : unique_ip_and_port ) {
-            servers.emplace_back( ip_port, working_directory, directory, push_strategy_file );
+            servers.emplace_back( ip_port, working_directory, directory, push_strategy_file, mahimahi_root);
         }
 
         /* set up DNS server */
