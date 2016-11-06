@@ -21,8 +21,8 @@ WebServer::WebServer( const Address & addr, const string & working_directory, co
 {
     pid_file_ = "/tmp/replayshell_apache_pid." + to_string( getpid() ) + "." + to_string( random() );
     config_file_.write( h2o_main_cfg );
-    std::cout << getuid() << " " << getgid() << std::endl;
-    //config_file_.write( "user: " + std::string(getlogin() ) + "\n" );
+    // std::cout << getuid() << " " << getgid() << std::endl;
+    //config_file_.write( "user: root\n" );
     config_file_.write( "pid-file: " + pid_file_ + "\n" );
     config_file_.write( "setenv:\n" );
     config_file_.write( "  WORKING_DIR: \""+working_directory+"\"\n" );
