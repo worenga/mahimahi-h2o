@@ -40,6 +40,12 @@ int main( int argc, char *argv[] )
     try {
         /* clear environment */
 
+
+        if (std::getenv("MAHIMAHI_ROOT") == NULL)
+        {
+            throw runtime_error( string( argv[ 0 ] ) + ": Please set `MAHIMAHI_ROOT` environment variable." );
+        }
+
         std::cout << "MAHIMAHI_ROOT: " <<  ::getenv("MAHIMAHI_ROOT") << std::endl;
         std::string mahimahi_root = std::getenv("MAHIMAHI_ROOT");
 
