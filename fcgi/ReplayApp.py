@@ -14,21 +14,18 @@ class ReplayApp:
 
         with open(self.push_strategy_file) as fd:
             parsed_push_strategy = json.load(fd)
-
-            if 'push_host' in parsed_push_strategy:
-                self.push_host = parsed_push_strategy['push_host']
-
-            if 'push_trigger_path' in parsed_push_strategy:
-                self.push_trigger_path = parsed_push_strategy['push_trigger_path']
-
-            if 'push_asset_list' in parsed_push_strategy:
-                self.push_asset_list = parsed_push_strategy['push_asset_list']
+            if len(parsed_push_strategy) > 0:
+                for push_strategy_for_host in parsed_push_strategy:
+                    # print push_strategy_for_host
+                    self.push_host.append(push_strategy_for_host['push_host'])
+                    self.push_trigger_path.append(push_strategy_for_host['push_trigger'])
+                    self.push_assets.append(push_strategy_for_host['push_resources'])
 
     def __init__(self, push_strategy_file):
         self.push_strategy_file = push_strategy_file
-        self.push_host = None
-        self.push_trigger_path = None
-        self.push_assets = None
+        self.push_host = []
+        self.push_trigger_path = []
+        self.push_assets = []
         self._parse_push_strategy()
 
     def __call__(self, environ, start_response):
@@ -72,17 +69,18 @@ class ReplayApp:
 
 
         hdrlist = []
-        if passed_env['HTTP_HOST'] == self.push_host:
-            if passed_env['REQUEST_URI'] == self.push_trigger_path:
-                linkstr = ''
-                # TODO (bewo): is there any limitation?
-                for asset in self.push_asset_list:
-                    if linkstr != '':
-                        linkstr += ','
-                    linkstr += '<' + asset + '>; rel=preload'
-
-                hdrlist.append(('x-extrapush', str(linkstr)))
-                #print 'WILL PUSH', ('x-extrapush', str(linkstr))
+        for i, push_host_strategy in enumerate(self.push_host):
+            if passed_env['HTTP_HOST'] == push_host_strategy:
+                if passed_env['REQUEST_URI'] == self.push_trigger_path[i]:
+                    linkstr = ''
+                    # TODO (bewo): is there any limitation?
+                    for asset in self.push_assets[i]:
+                        if linkstr != '':
+                            linkstr += ','
+                        linkstr += '<' + asset + '>; rel=preload'
+                    hdrlist.append(('x-extrapush', str(linkstr)))
+                    print 'WILL PUSH', ('x-extrapush', str(linkstr))
+                    break
 
         is_chunked = False
         
