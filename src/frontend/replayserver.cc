@@ -7,7 +7,10 @@
 
 #include <iostream>
 #include <vector>
+#include <memory>
 #include <limits>
+
+#include <libgen.h>
 
 #include "util.hh"
 #include "http_record.pb.h"
@@ -16,6 +19,7 @@
 #include "http_request.hh"
 #include "http_response.hh"
 #include "file_descriptor.hh"
+
 
 using namespace std;
 
@@ -103,6 +107,17 @@ unsigned int match_score( const MahimahiProtobufs::RequestResponse & saved_recor
     return max_match;
 }
 
+uint32_t hash32(const uint8_t *x, size_t n)
+{
+    uint32_t v = 2166136261;
+    for (size_t i = 0; i < n; i++) {
+        v ^= x[i];
+        v *= 16777619;
+    }
+    return v;
+}
+
+
 int main( void )
 {
     try {
@@ -122,8 +137,20 @@ int main( void )
         unsigned int best_score = 0;
         std::vector<MahimahiProtobufs::RequestResponse> best_matches;
 
+        auto stripped = strip_query(request_line);
+        string hash = to_string(hash32(reinterpret_cast<const uint8_t*>(stripped.c_str()),stripped.size()-1));
+
         int num_files = 0;
         for ( const auto & filename : files ) {
+
+            shared_ptr<char> ts1(strdup(filename.c_str()));
+            string basefilename = string(basename(ts1.get()));
+            auto cutted = basefilename.substr(0,min(hash.size(),basefilename.size()));
+            if(cutted != hash)
+            {
+                continue;
+            }
+
             num_files++;
             FileDescriptor fd( SystemCall( "open", open( filename.c_str(), O_RDONLY ) ) );
             MahimahiProtobufs::RequestResponse current_record;
