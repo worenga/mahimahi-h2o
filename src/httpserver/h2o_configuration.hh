@@ -10,6 +10,8 @@
 const std::string h2o_main_cfg = R"END(
 ### Global Base
 send-server-name: OFF
+max-connections: 1024
+tcp-fastopen: 0
 
 ### Global HTTP/1 Settings
 http1-upgrade-to-http2: OFF
@@ -25,9 +27,9 @@ http2-casper: OFF
 http2-idle-timeout: 30
 http2-max-concurrent-requests-per-connection: 255
 ### Compression
-compress: ON
+compress: OFF
 compress-minimum-size: 100
-gzip: ON
+gzip: OFF
 # access-log: /dev/null
 # error-log: /dev/stdout
 )END";

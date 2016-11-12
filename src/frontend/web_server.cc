@@ -39,7 +39,7 @@ WebServer::WebServer( const Address & addr, const string & working_directory, co
     config_file_.write( "        ocsp-update-interval: 0\n");
     config_file_.write( "    paths:\n");
     config_file_.write( "      \"/\":\n");
-    config_file_.write( "        fastcgi.spawn: \"PUSH_STRATEGY_FILE='"+push_strategy_file+"' exec " + mahimahi_root + "/fcgi/FcgiHandler.py\"\n");
+    config_file_.write( "        fastcgi.spawn: \"PUSH_STRATEGY_FILE='"+push_strategy_file+"' REPLAYSERVER_FN='"+string(REPLAYSERVER)+"' WORKING_DIR='"+working_directory+"' RECORDING_DIR='"+record_path+"' exec " + mahimahi_root + "/fcgi/FcgiHandler.py\"\n");
 //    config_file_.write( "        mruby.handler: |\n");
 //    config_file_.write( "          Proc.new do |env|\n");
 //    config_file_.write( "            [200, {'content-type' => 'text/plain'}, [\"Peter!\\n\"]]\n");
