@@ -160,7 +160,7 @@ int main( int argc, char *argv[] )
         }
 
         /* set up DNS server */
-        TempFile dnsmasq_hosts( "/tmp/replayshell_hosts" );
+        UniqueFile dnsmasq_hosts( "/tmp/replayshell_hosts" );
         for ( const auto mapping : hostname_to_ip ) {
             dnsmasq_hosts.write( mapping.second.ip() + " " + mapping.first + "\n" );
         }
