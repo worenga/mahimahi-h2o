@@ -10,7 +10,9 @@
 const std::string h2o_main_cfg = R"END(
 ### Global Base
 send-server-name: OFF
-max-connections: 1024
+max-connections: 5000
+max-delegations: 1000
+num-threads: 10
 tcp-fastopen: 0
 
 ### Global HTTP/1 Settings
@@ -25,7 +27,7 @@ http2-push-preload: ON
 http2-reprioritize-blocking-assets: OFF
 http2-casper: OFF
 http2-idle-timeout: 30
-http2-max-concurrent-requests-per-connection: 255
+http2-max-concurrent-requests-per-connection: 2048
 ### Compression
 compress: OFF
 compress-minimum-size: 100
