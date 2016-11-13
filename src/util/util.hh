@@ -34,5 +34,6 @@ public:
 };
 
 void assert_not_root( void );
+void adjust_somaxconn( void );
 
 #endif /* UTIL_HH */

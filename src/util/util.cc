@@ -205,3 +205,11 @@ string get_working_directory( void )
 
     return cwd_ptr.get();
 }
+
+void adjust_somaxconn(void)
+{
+	FileDescriptor fd( SystemCall( "open", open( "/proc/sys/net/core/somaxconn", O_WRONLY ) ) );
+	fd.write("5000");
+}
+
+

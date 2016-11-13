@@ -116,11 +116,7 @@ int main( int argc, char *argv[] )
         set< Address > unique_ip_and_port;
         vector< pair< string, Address > > hostname_to_ip;
 	
-	
-        {
-		FileDescriptor fd( SystemCall( "open", open( "/proc/sys/net/core/somaxconn", O_WRONLY ) ) );
-		fd.write("5000");
-	}
+	adjust_somaxconn();
 	
         {
             TemporarilyUnprivileged tu;
