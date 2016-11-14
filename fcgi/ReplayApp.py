@@ -16,10 +16,16 @@ class ReplayApp:
             parsed_push_strategy = json.load(fd)
             if len(parsed_push_strategy) > 0:
                 for push_strategy_for_host in parsed_push_strategy:
-                    # print push_strategy_for_host
-                    self.push_host.append(push_strategy_for_host['push_host'])
-                    self.push_trigger_path.append(push_strategy_for_host['push_trigger'])
-                    self.push_assets.append(push_strategy_for_host['push_resources'])
+                    if 'push_host' in push_strategy_for_host.keys():
+                        # print push_strategy_for_host
+                        self.push_host.append(push_strategy_for_host['push_host'])
+                        self.push_trigger_path.append(push_strategy_for_host['push_trigger'])
+                        self.push_assets.append(push_strategy_for_host['push_resources'])
+                    if 'hint_host' in push_strategy_for_host.keys():
+                        self.hint_host.append(push_strategy_for_host['hint_host'])
+                        self.hint_trigger_path.append(push_strategy_for_host['hint_trigger'])
+                        self.hint_assets.append(push_strategy_for_host['hint_resources'])
+
     def _init_push_responsecache(self):
         env = os.environ
         for i,host in enumerate(self.push_host):
@@ -46,6 +52,11 @@ class ReplayApp:
         self.push_trigger_path = []
         self.push_assets = []
         self.push_cache = []
+
+        self.hint_host = []
+        self.hint_trigger_path = []
+        self.hint_assets = []
+
         self._parse_push_strategy()
         self._init_push_responsecache()
         print "init done"
@@ -105,7 +116,7 @@ class ReplayApp:
 
 
         hdrlist = []
-        if not is_push:
+        if not is_push and env['SERVER_PROTOCOL'] == "HTTP/2":
             for i, push_host_strategy in enumerate(self.push_host):
                 if passed_env['HTTP_HOST'] == push_host_strategy:
                     if passed_env['REQUEST_URI'] == self.push_trigger_path[i]:
@@ -118,6 +129,18 @@ class ReplayApp:
                         hdrlist.append(('x-extrapush', str(linkstr)))
                         print 'WILL PUSH: ' ,len(self.push_assets[i]) #//, ('x-extrapush', str(linkstr))
                         break
+
+        for i, hint_host_strategy in enumerate(self.hint_host):
+            if passed_env['HTTP_HOST'] == hint_host_strategy:
+                if passed_env['REQUEST_URI'] == self.hint_trigger_path[i]:
+                    linkstr = ''
+                    for asset in self.hint_assets[i]:
+                        if linkstr != '':
+                           linkstr += ','
+                    linkstr += '<' + asset + '>; rel=preload'
+                    hdrlist.append(('link', str(linkstr)))
+                    print 'WILL HINT: ' ,len(self.hint_assets[i]) #//, ('x-extrapush', str(linkstr))
+                    break
 
         is_chunked = False
         
