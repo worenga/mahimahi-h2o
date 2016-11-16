@@ -33,7 +33,7 @@ def decode(fileobj, chunk_limit=to_megabytes(5)):
         length = to_hex(hexsizestr)
         hexsizestr = ''
         len_size_bytes = 0
-        
+
         if length > chunk_limit:
             raise OverflowError(
                 'invalid chunk size of "%d" requested, max is "%d"' % (length, chunk_limit))

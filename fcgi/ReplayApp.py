@@ -44,7 +44,7 @@ class ReplayApp:
                 p = subprocess.Popen([env['REPLAYSERVER_FN']], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=passed_env)
                 (replay_stdout, replay_stderr) = p.communicate()
                 self.push_cache[i].append(replay_stdout)
-            
+
 
     def __init__(self, push_strategy_file, replayserver_fn):
         self.push_strategy_file = push_strategy_file
@@ -65,8 +65,8 @@ class ReplayApp:
         #print environ
         hdrlist = []
         env = dict(environ)
-       
-        cached_response = None 
+
+        cached_response = None
         is_push = False
         if env['REQUEST_METHOD'] == "GET":
             for u,host in enumerate(self.push_host):
@@ -76,7 +76,8 @@ class ReplayApp:
                           #print "pushing from cache..."
                           is_push = True
                           cached_response = self.push_cache[u][v]
-	if cached_response is None:        
+
+        if cached_response is None:
             passed_env = dict()
 
             # remap for compat with replayserver
@@ -101,13 +102,13 @@ class ReplayApp:
                 [env['REPLAYSERVER_FN']], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=passed_env)
 
             (cached_response, replay_stderr) = p.communicate()
-            
+
 
         response_header, response_body = cached_response.split('\r\n\r\n', 1)
 
         status_line, headers_alone = response_header.split('\r\n', 1)
         splitted_status = status_line.split(' ')
-        
+
         # response_code = status_line[1]
 
         status_cleaned = ' '.join(splitted_status[1:])
@@ -144,21 +145,19 @@ class ReplayApp:
                             break
 
         is_chunked = False
-        
+
         for key in headers.keys():
             if key == "transfer-encoding" and 'chunked' in headers[key]:
                 is_chunked = True
             else:
                 if key not in ['expires', 'date', 'last-modified']:
-                    hdrlist.append((key, headers[key]))
+                    hdrlist.append((key.strip(), headers[key]))
 
         if is_chunked:
-            print "will decode chunked"
-            decoded = StringIO()
+            # print "will decode chunked"
             start_response(status_cleaned, hdrlist)
             for chunk in decode(StringIO(response_body)):
-                decoded.write(chunk)
-            yield decoded.getvalue()
+                yield str(chunk)
         else:
             start_response(status_cleaned, hdrlist)
             yield response_body
