@@ -130,17 +130,18 @@ class ReplayApp:
                         print 'WILL PUSH: ' ,len(self.push_assets[i]) #//, ('x-extrapush', str(linkstr))
                         break
 
-        for i, hint_host_strategy in enumerate(self.hint_host):
-            if passed_env['HTTP_HOST'] == hint_host_strategy:
-                if passed_env['REQUEST_URI'] == self.hint_trigger_path[i]:
-                    linkstr = ''
-                    for asset in self.hint_assets[i]:
-                        if linkstr != '':
-                           linkstr += ','
-                    linkstr += '<' + asset + '>; rel=preload'
-                    hdrlist.append(('link', str(linkstr)))
-                    print 'WILL HINT: ' ,len(self.hint_assets[i]) #//, ('x-extrapush', str(linkstr))
-                    break
+        if not is_push:
+                for i, hint_host_strategy in enumerate(self.hint_host):
+                    if passed_env['HTTP_HOST'] == hint_host_strategy:
+                        if passed_env['REQUEST_URI'] == self.hint_trigger_path[i]:
+                            linkstr = ''
+                            for asset in self.hint_assets[i]:
+                                if linkstr != '':
+                                   linkstr += ','
+                            linkstr += '<' + asset + '>; rel=preload'
+                            hdrlist.append(('link', str(linkstr)))
+                            print 'WILL HINT: ' ,len(self.hint_assets[i]) #//, ('x-extrapush', str(linkstr))
+                            break
 
         is_chunked = False
         
