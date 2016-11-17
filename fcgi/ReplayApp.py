@@ -160,6 +160,8 @@ class ReplayApp:
                                 as_string = self.hint_as_string[i][j]
                                 if as_string != '':
                                    as_string='; as='+as_string+''
+                                if self.hint_as_string[i][j] == "font":
+                                   as_string += ";crossorigin"
                                 linkstr_to_append = '<'+asset + '>; rel=preload'+as_string+';type="'+self.hint_mimetype[i][j]+'"'
                                 linkstr += linkstr_to_append
                             hdrlist.append(('link', str(linkstr)))
@@ -174,6 +176,7 @@ class ReplayApp:
             else:
                 if key not in ['expires', 'date', 'last-modified']:
                     hdrlist.append((key.strip(), headers[key]))
+            hdrlist.append(('Access-Control-Allow-Origin','*'))
 
         if is_chunked:
             # print "will decode chunked"
