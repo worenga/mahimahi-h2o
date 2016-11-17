@@ -25,6 +25,22 @@ class ReplayApp:
                         self.hint_host.append(push_strategy_for_host['hint_host'])
                         self.hint_trigger_path.append(push_strategy_for_host['hint_trigger'])
                         self.hint_assets.append(push_strategy_for_host['hint_resources'])
+                        self.hint_mimetype.append(push_strategy_for_host['hint_mimetype'])
+                        mimetypes = []
+                        for i,mimetype in enumerate(push_strategy_for_host['hint_mimetype']):
+                                if 'image' in mimetype:
+                                        mimetypes.append('image')
+                                elif 'css' in mimetype:
+                                        mimetypes.append('style')
+                                elif 'javascript' in mimetype:
+                                        mimetypes.append('script')
+                                elif 'font' in mimetype:
+                                        mimetypes.append('font')
+                                else: #xhr
+                                        print "WARNING: unmatched mimetype",mimetype, push_strategy_for_host['hint_resources'][i]
+                                        mimetypes.append('')
+
+                        self.hint_as_string.append(mimetypes)
 
     def _init_push_responsecache(self):
         env = os.environ
@@ -56,6 +72,8 @@ class ReplayApp:
         self.hint_host = []
         self.hint_trigger_path = []
         self.hint_assets = []
+        self.hint_as_string = []
+        self.hint_mimetype = []
 
         self._parse_push_strategy()
         self._init_push_responsecache()
@@ -136,10 +154,14 @@ class ReplayApp:
                     if passed_env['HTTP_HOST'] == hint_host_strategy:
                         if passed_env['REQUEST_URI'] == self.hint_trigger_path[i]:
                             linkstr = ''
-                            for asset in self.hint_assets[i]:
+                            for j, asset in enumerate(self.hint_assets[i]):
                                 if linkstr != '':
                                    linkstr += ','
-                                linkstr += '<' + asset + '>; rel=preload'
+                                as_string = self.hint_as_string[i][j]
+                                if as_string != '':
+                                   as_string='; as='+as_string+''
+                                linkstr_to_append = '<'+asset + '>; rel=preload'+as_string+';type="'+self.hint_mimetype[i][j]+'"'
+                                linkstr += linkstr_to_append
                             hdrlist.append(('link', str(linkstr)))
                             print 'WILL HINT: ' ,len(self.hint_assets[i]) #//, ('x-extrapush', str(linkstr))
                             break
