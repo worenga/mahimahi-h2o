@@ -139,7 +139,7 @@ class ReplayApp:
                             for asset in self.hint_assets[i]:
                                 if linkstr != '':
                                    linkstr += ','
-                            linkstr += '<' + asset + '>; rel=preload'
+                                linkstr += '<' + asset + '>; rel=preload'
                             hdrlist.append(('link', str(linkstr)))
                             print 'WILL HINT: ' ,len(self.hint_assets[i]) #//, ('x-extrapush', str(linkstr))
                             break
