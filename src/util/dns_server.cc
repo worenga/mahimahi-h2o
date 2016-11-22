@@ -16,7 +16,9 @@ using namespace std;
 
 ChildProcess start_dnsmasq( const vector< string > & extra_arguments )
 {
-    vector< string > args = { DNSMASQ, "--keep-in-foreground", "--no-resolv",
+
+    vector< string > args = { DNSMASQ, "--keep-in-foreground", "--no-resolv", "--all-servers",
+//			      "--log-facility=-", "-q",  //comment this in to see dns queries in console
                               "--no-hosts",
                               "-C", "/dev/null" };
 
