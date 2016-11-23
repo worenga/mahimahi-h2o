@@ -83,6 +83,8 @@ class ReplayApp:
         #print environ
         hdrlist = []
         env = dict(environ)
+        if env['HTTP_HOST'].endswith('.'):
+           env['HTTP_HOST'] = env['HTTP_HOST'][:-1]
 
         cached_response = None
         is_push = False
@@ -176,7 +178,7 @@ class ReplayApp:
             else:
                 if key not in ['expires', 'date', 'last-modified']:
                     hdrlist.append((key.strip(), headers[key]))
-            hdrlist.append(('Access-Control-Allow-Origin','*'))
+        hdrlist.append(('Access-Control-Allow-Origin','*'))
 
         if is_chunked:
             # print "will decode chunked"
