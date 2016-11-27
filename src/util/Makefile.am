@@ -5,7 +5,8 @@ noinst_LIBRARIES = libutil.a
 
 libutil_a_SOURCES = exception.hh ezio.cc ezio.hh                               \
         file_descriptor.hh file_descriptor.cc netdevice.cc netdevice.hh        \
-	timestamp.cc timestamp.hh                                              \
+        timestamp.cc timestamp.hh                                              \
+        network_namespace.cc network_namespace.hh                              \
         child_process.hh child_process.cc signalfd.hh signalfd.cc              \
         socket.cc socket.hh address.cc address.hh                              \
         system_runner.hh system_runner.cc nat.hh nat.cc                        \
@@ -14,4 +15,6 @@ libutil_a_SOURCES = exception.hh ezio.cc ezio.hh                               \
         poller.hh poller.cc bytestream_queue.hh bytestream_queue.cc            \
         event_loop.hh event_loop.cc                                            \
         temp_file.hh temp_file.cc dns_server.hh dns_server.cc                  \
-        socketpair.hh socketpair.cc
+        socketpair.hh socketpair.cc tc_rule.hh tc_rule.cc                      \
+        server_certificate.hh server_certificate.cc                            \
+        ca_environment.hh ca_environment.cc                                   

@@ -7,13 +7,13 @@
 
 using namespace std;
 
-void DelayQueue::read_packet( const string & contents )
+void ShapingQueue::read_packet( const string & contents )
 {
 //    std::cout <<  contents << std::endl;
     packet_queue_.emplace( timestamp() + delay_ms_, contents );
 }
 
-void DelayQueue::write_packets( FileDescriptor & fd )
+void ShapingQueue::write_packets( FileDescriptor & fd )
 {
     while ( (!packet_queue_.empty())
             && (packet_queue_.front().first <= timestamp()) ) {
@@ -22,17 +22,7 @@ void DelayQueue::write_packets( FileDescriptor & fd )
     }
 }
 
-unsigned int DelayQueue::wait_time( void ) const
+unsigned int ShapingQueue::wait_time( void ) const
 {
-    if ( packet_queue_.empty() ) {
-        return numeric_limits<uint16_t>::max();
-    }
-
-    const auto now = timestamp();
-
-    if ( packet_queue_.front().first <= now ) {
-        return 0;
-    } else {
-        return packet_queue_.front().first - now;
-    }
+    return packet_queue_.empty() ? numeric_limits<uint16_t>::max() : 0;
 }

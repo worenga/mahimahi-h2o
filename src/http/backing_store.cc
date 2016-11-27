@@ -1,5 +1,9 @@
 /* -*-mode:c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
+#include <iostream>
+#include <string>
+
+#include "util.hh"
 #include "backing_store.hh"
 #include "http_record.pb.h"
 #include "temp_file.hh"
@@ -16,7 +20,11 @@ void HTTPDiskStore::save( const HTTPResponse & response, const Address & server_
     unique_lock<mutex> ul( mutex_ );
 
     /* output file to write current request/response pair protobuf (user has all permissions) */
-    UniqueFile file( record_folder_ + "save" );
+
+    auto stripped = strip_query(response.request().first_line());
+    string hash = to_string(hash32(reinterpret_cast<const uint8_t*>(stripped.c_str()),stripped.size()));
+    UniqueFile file( record_folder_ + hash );
+
 
     /* construct protocol buffer */
     MahimahiProtobufs::RequestResponse output;

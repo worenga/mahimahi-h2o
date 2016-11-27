@@ -108,6 +108,8 @@ int main( int argc, char *argv[] )
 
                     SystemCall( "ioctl SIOCADDRT", ioctl( UDPSocket().fd_num(), SIOCADDRT, &route ) );
 
+                    adjust_somaxconn();		
+
                     /* create DNS proxy if nameserver address is local */
                     auto dns_inside = DNSProxy::maybe_proxy( nameserver,
                                                              dns_outside.udp_listener().local_address(),
