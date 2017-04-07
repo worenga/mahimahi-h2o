@@ -38,7 +38,6 @@ private:
 public:
     VirtualEthernetPair( const std::string & s_outside_name, const std::string & s_inside_name );
     ~VirtualEthernetPair();
-
     void set_kernel_will_destroy( void ) { kernel_will_destroy_ = true; }
 };
 
