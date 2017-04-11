@@ -135,6 +135,7 @@ class ReplayApp:
 
         headers = Message(StringIO(headers_alone))
 
+        #print env['REQUEST_METHOD'], env['REQUEST_URI']
 
         hdrlist = []
         if not is_push and env['SERVER_PROTOCOL'] == "HTTP/2":
@@ -171,6 +172,7 @@ class ReplayApp:
                             break
 
         is_chunked = False
+        corsfound = False
 
         for key in headers.keys():
             if key == "transfer-encoding" and 'chunked' in headers[key]:
@@ -178,7 +180,11 @@ class ReplayApp:
             else:
                 if key not in ['expires', 'date', 'last-modified']:
                     hdrlist.append((key.strip(), headers[key]))
-        hdrlist.append(('Access-Control-Allow-Origin','*'))
+                if key.lower() == 'access-control-allow-origin':
+                    corsfound = True
+        
+        if not corsfound:        
+            hdrlist.append(('Access-Control-Allow-Origin','*'))
 
         if is_chunked:
             # print "will decode chunked"
