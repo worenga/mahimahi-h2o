@@ -183,7 +183,10 @@ class ReplayApp:
                 if key.lower() == 'access-control-allow-origin':
                     corsfound = True
         
-        if not corsfound:        
+        if not corsfound: 
+            # this is required for font hinting...
+            # note that we will not overwrite cors headers b/c
+            # in some xhr situations * is not sufficient
             hdrlist.append(('Access-Control-Allow-Origin','*'))
 
         if is_chunked:
