@@ -51,6 +51,9 @@ void NetworkNamespace::create_resolvconf( const std::string & nameserver )
     resolvconf_file_.reset( std::move( new TempFile( "resolvconf" ) ) );
     has_own_resolvconf_ = true;
     
+    std::cerr << resolvconf_file_->name() << std::endl;
+
+
     char mode[] = "0644";
     if ( chmod (resolvconf_file_->name().c_str(), strtol(mode, 0, 8) ) < 0 ) {
         throw runtime_error( string("chmod ") + mode + " for " + resolvconf_file_->name() +" failed: " + strerror(errno) + "\n " );

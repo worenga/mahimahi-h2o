@@ -6,12 +6,15 @@ import os
 import subprocess
 from strip_chunked import decode
 from mimetools import Message
+from urlparse import urlparse
 
 
 class ReplayApp:
 
     def _parse_push_strategy(self):
 
+        if self.push_strategy_file == "noop":
+            return
         with open(self.push_strategy_file) as fd:
             parsed_push_strategy = json.load(fd)
             if len(parsed_push_strategy) > 0:
@@ -47,6 +50,11 @@ class ReplayApp:
         for i,host in enumerate(self.push_host):
             self.push_cache.append([])
             for j,asset_name in enumerate(self.push_assets[i]):
+                parsed = urlparse(asset_name)
+                stripped = asset_name[len('https://'+parsed.netloc):]
+                asset_name = stripped
+
+                print "Caching... ", asset_name, parsed
                 # load responses into cache
                 passed_env = dict()
                 # remap for compat with replayserver
@@ -77,9 +85,9 @@ class ReplayApp:
 
         self._parse_push_strategy()
         self._init_push_responsecache()
-        print "init done"
 
     def __call__(self, environ, start_response):
+        print "call! " + environ['REQUEST_URI']
         #print environ
         hdrlist = []
         env = dict(environ)
@@ -90,14 +98,18 @@ class ReplayApp:
         is_push = False
         if env['REQUEST_METHOD'] == "GET":
             for u,host in enumerate(self.push_host):
-               if host == env['HTTP_HOST']:
+                if host == env['HTTP_HOST']:
                   for v,push_resource in enumerate(self.push_assets[u]):
-                      if push_resource == env['REQUEST_URI']:
-                          #print "pushing from cache..."
-                          is_push = True
-                          cached_response = self.push_cache[u][v]
+                        parsed = urlparse(push_resource)
+                        stripped = push_resource[len('https://'+parsed.netloc):]
+                        push_resource = stripped
+                        if push_resource == env['REQUEST_URI']:
+                            #print "pushing from cache..."
+                            is_push = True
+                            cached_response = self.push_cache[u][v]
 
         if cached_response is None:
+            print "Not cached!"
             passed_env = dict()
 
             # remap for compat with replayserver
@@ -136,8 +148,28 @@ class ReplayApp:
         headers = Message(StringIO(headers_alone))
 
         #print env['REQUEST_METHOD'], env['REQUEST_URI']
-
+       
+        is_chunked = False
+        corsfound = False
         hdrlist = []
+
+        for key in headers.keys():
+            if key == "transfer-encoding" and 'chunked' in headers[key]:
+                is_chunked = True
+            else:
+                #Filter out any link header the site might emit.
+                if key not in ['expires', 'date', 'last-modified','link']:
+                    hdrlist.append((key.strip(), headers[key]))
+                if key.lower() == 'access-control-allow-origin':
+                    corsfound = True
+        
+        if not corsfound: 
+            # this is required for font hinting...
+            # note that we will not overwrite cors headers b/c
+            # in some xhr situations * is not sufficient
+            hdrlist.append(('Access-Control-Allow-Origin','*'))
+
+        
         if not is_push and env['SERVER_PROTOCOL'] == "HTTP/2":
             for i, push_host_strategy in enumerate(self.push_host):
                 if passed_env['HTTP_HOST'] == push_host_strategy:
@@ -171,23 +203,7 @@ class ReplayApp:
                             print 'WILL HINT: ' ,len(self.hint_assets[i]) #//, ('x-extrapush', str(linkstr))
                             break
 
-        is_chunked = False
-        corsfound = False
-
-        for key in headers.keys():
-            if key == "transfer-encoding" and 'chunked' in headers[key]:
-                is_chunked = True
-            else:
-                if key not in ['expires', 'date', 'last-modified']:
-                    hdrlist.append((key.strip(), headers[key]))
-                if key.lower() == 'access-control-allow-origin':
-                    corsfound = True
-        
-        if not corsfound: 
-            # this is required for font hinting...
-            # note that we will not overwrite cors headers b/c
-            # in some xhr situations * is not sufficient
-            hdrlist.append(('Access-Control-Allow-Origin','*'))
+        print "start response! " + environ['REQUEST_URI']
 
         if is_chunked:
             # print "will decode chunked"
