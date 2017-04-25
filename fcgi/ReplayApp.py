@@ -54,7 +54,7 @@ class ReplayApp:
                 stripped = asset_name[len('https://'+parsed.netloc):]
                 asset_name = stripped
 
-                print "Caching... ", asset_name, parsed
+                # print "Caching... ", asset_name, parsed
                 # load responses into cache
                 passed_env = dict()
                 # remap for compat with replayserver
@@ -87,7 +87,7 @@ class ReplayApp:
         self._init_push_responsecache()
 
     def __call__(self, environ, start_response):
-        print "call! " + environ['REQUEST_URI']
+        #print "call! " + environ['REQUEST_URI']
         #print environ
         hdrlist = []
         env = dict(environ)
@@ -109,7 +109,7 @@ class ReplayApp:
                             cached_response = self.push_cache[u][v]
 
         if cached_response is None:
-            print "Not cached!"
+            # print environ['REQUEST_URI'], "Not cached!"
             passed_env = dict()
 
             # remap for compat with replayserver
@@ -203,7 +203,7 @@ class ReplayApp:
                             print 'WILL HINT: ' ,len(self.hint_assets[i]) #//, ('x-extrapush', str(linkstr))
                             break
 
-        print "start response! " + environ['REQUEST_URI']
+        # print "start response! " + environ['REQUEST_URI']
 
         if is_chunked:
             # print "will decode chunked"
