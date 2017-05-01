@@ -33,10 +33,13 @@ WebServer::WebServer( const Address & addr, const string & working_directory, co
     config_file_.write( "    listen:\n");
     config_file_.write( "      host: "+addr.ip()+"\n");
     config_file_.write( "      port: "+to_string(addr.port())+"\n");//+std::to_string(addr.port())+"\n");
-    config_file_.write( "      ssl:\n");
-    config_file_.write( "        key-file: "+h2o_ssl_config_keyfile+"\n");
-    config_file_.write( "        certificate-file: "+h2o_ssl_config_certfile+"\n");
-    config_file_.write( "        ocsp-update-interval: 0\n");
+    if(addr.port() != 80)
+    {
+        config_file_.write( "      ssl:\n");
+        config_file_.write( "        key-file: "+h2o_ssl_config_keyfile+"\n");
+        config_file_.write( "        certificate-file: "+h2o_ssl_config_certfile+"\n");
+        config_file_.write( "        ocsp-update-interval: 0\n");
+    }
     config_file_.write( "    paths:\n");
     config_file_.write( "      \"/\":\n");
     config_file_.write( "        fastcgi.spawn: \"PUSH_STRATEGY_FILE='"+push_strategy_file+"' REPLAYSERVER_FN='"+string(REPLAYSERVER)+"' WORKING_DIR='"+working_directory+"' RECORDING_DIR='"+record_path+"' exec " + mahimahi_root + "/fcgi/FcgiHandler.py\"\n");

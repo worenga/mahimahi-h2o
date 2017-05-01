@@ -9,5 +9,5 @@ from ReplayApp import ReplayApp
 
 app = ReplayApp(os.environ['PUSH_STRATEGY_FILE'],os.environ['REPLAYSERVER_FN'])
 
-#WSGIServer(app,multiplexed=False,multithreaded=True,minSpare=1, maxSpare=1).run()
+#WSGIServer(app,multiplexed=False,multithreaded=True,minSpare=2, maxSpare=12).run()
 WSGIServer(app,multiplexed=False,multithreaded=False).run()
