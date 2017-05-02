@@ -17,6 +17,8 @@
 #include "dns_server.hh"
 #include "exception.hh"
 #include "network_namespace.hh"
+#include "server_certificate.hh"
+#include "h2o_configuration.hh"
 
 
 #include "http_record.pb.h"
@@ -139,6 +141,8 @@ int main( int argc, char *argv[] )
 
                 hostname_to_ip.emplace_back( HTTPRequest( protobuf.request() ).get_header_value( "Host" ),
                                              address );
+
+                //std::cout << "Hostname:" << HTTPRequest( protobuf.request() ).get_header_value( "Host" ) << "IP: " << address.ip() << std::endl;
             }
         }
 
@@ -149,10 +153,48 @@ int main( int argc, char *argv[] )
             interface_counter++;
         }
 
+        //
+        CAEnvironment caenv(mahimahi_root);
         /* set up web servers */
         vector< WebServer > servers;
-        for ( const auto ip_port : unique_ip_and_port ) {
-            servers.emplace_back( ip_port, working_directory, directory, push_strategy_file, mahimahi_root);
+        vector< std::unique_ptr<ServerCertificate> > certificates;
+        for ( const auto ip_port : unique_ip_and_port )
+        {
+
+            std::string certfile = h2o_ssl_config_certfile;
+            std::string keyfile = h2o_ssl_config_keyfile;
+
+            std::string hostname_found = "";
+            std::set<std::string> alts;
+            //Get Hostnames that have the same ip:
+            for ( const auto mapping : hostname_to_ip )
+            {
+                if(ip_port.ip() == mapping.second.ip())
+                {
+                    if(hostname_found == "")
+                    {
+                        hostname_found = mapping.first;
+                    }
+                    else
+                    {
+                        alts.insert(mapping.first);
+                    }
+                }
+            }
+
+            if(hostname_found != "")
+            {
+                std::unique_ptr<ServerCertificate> p1(new ServerCertificate(hostname_found,alts,caenv));  // p1 owns Foo
+                certificates.emplace_back(std::move(p1));
+                keyfile = certificates.back()->privatekey_file->name();
+                certfile = certificates.back()->certificate_file->name();
+            }
+            else
+            {
+
+            }
+
+            servers.emplace_back( ip_port, working_directory, directory, push_strategy_file,keyfile, certfile, mahimahi_root);
         }
 
         /* set up DNS server */

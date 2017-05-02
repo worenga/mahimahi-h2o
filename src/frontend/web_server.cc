@@ -14,7 +14,7 @@
 
 using namespace std;
 
-WebServer::WebServer( const Address & addr, const string & working_directory, const string & record_path, const std::string & push_strategy_file, const std::string & mahimahi_root )
+WebServer::WebServer( const Address & addr, const string & working_directory, const string & record_path, const std::string & push_strategy_file, const string & keyfile, const string & certfile, const std::string & mahimahi_root )
     : config_file_( "/tmp/replayshell_h2o_config" ),pid_file_("/tmp/replayshell_h2o_pidfile"),
       h2osrv(nullptr),
       moved_away_( false )
@@ -29,15 +29,16 @@ WebServer::WebServer( const Address & addr, const string & working_directory, co
     config_file_.write( "  RECORDING_DIR: \""+record_path+"\"\n" );
     config_file_.write( "  REPLAYSERVER_FN: \""+string(REPLAYSERVER)+"\"\n" );
     config_file_.write( "hosts:\n" );
-    config_file_.write( std::string("  \"") + addr.str() + std::string("\":\n") );
+    //config_file_.write( std::string("  \"") + addr.str() + std::string("\":\n") );
+    config_file_.write( std::string("  \"") + "*" + std::string("\":\n") );
     config_file_.write( "    listen:\n");
     config_file_.write( "      host: "+addr.ip()+"\n");
     config_file_.write( "      port: "+to_string(addr.port())+"\n");//+std::to_string(addr.port())+"\n");
     if(addr.port() != 80)
     {
         config_file_.write( "      ssl:\n");
-        config_file_.write( "        key-file: "+h2o_ssl_config_keyfile+"\n");
-        config_file_.write( "        certificate-file: "+h2o_ssl_config_certfile+"\n");
+        config_file_.write( "        key-file: "+keyfile+"\n");
+        config_file_.write( "        certificate-file: "+certfile+"\n");
         config_file_.write( "        ocsp-update-interval: 0\n");
     }
     config_file_.write( "    paths:\n");
