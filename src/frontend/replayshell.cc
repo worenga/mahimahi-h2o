@@ -139,8 +139,24 @@ int main( int argc, char *argv[] )
                 unique_ip.emplace( address.ip(), 0 );
                 unique_ip_and_port.emplace( address );
 
-                hostname_to_ip.emplace_back( HTTPRequest( protobuf.request() ).get_header_value( "Host" ),
-                                             address );
+                auto request = HTTPRequest( protobuf.request() );
+                
+                if(request.has_header("Host"))
+                {
+                    hostname_to_ip.emplace_back( request.get_header_value( "Host" ), address );
+                    std::cout << request.get_header_value( "Host" ) << std::endl;
+                }
+                else if(request.has_header(":authority"))
+                {
+                    hostname_to_ip.emplace_back( request.get_header_value( ":authority" ), address );
+                    //std::cout << request.get_header_value( ":authority" ) << std::endl;
+                }
+                else
+                {
+                    throw runtime_error( string( argv[ 0 ] ) + ": Host or authority not found!" );
+                }
+
+                
 
                 //std::cout << "Hostname:" << HTTPRequest( protobuf.request() ).get_header_value( "Host" ) << "IP: " << address.ip() << std::endl;
             }

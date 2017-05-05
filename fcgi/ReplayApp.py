@@ -179,6 +179,7 @@ class ReplayApp:
                         for asset in self.push_assets[i]:
                             if linkstr != '':
                                  linkstr += ','
+                            # print asset;
                             linkstr += '<' + asset + '>; rel=preload'
                         hdrlist.append(('x-extrapush', str(linkstr)))
                         print 'WILL PUSH: ' ,len(self.push_assets[i]) #//, ('x-extrapush', str(linkstr))

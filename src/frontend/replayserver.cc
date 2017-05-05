@@ -81,9 +81,24 @@ unsigned int match_score( const MahimahiProtobufs::RequestResponse & saved_recor
     }
 
     /* match host header */
-    if ( not header_match( "HTTP_HOST", "Host", saved_request ) ) {
+    if ( saved_request.has_header("Host") )
+    {
+        if ( not header_match( "HTTP_HOST", "Host", saved_request ) ) {
+            return 0;
+        }
+    }else if ( saved_request.has_header(":authority") )
+    {
+        const char * const env_value = getenv( "HTTP_HOST" );
+        if (saved_request.get_header_value( ":authority" ) != string( env_value ))
+        {
+            return 0;
+        }
+    }else{
         return 0;
     }
+    
+
+
 
     /* match user agent */
 /*    if ( not header_match( "HTTP_USER_AGENT", "User-Agent", saved_request ) ) {
@@ -137,8 +152,14 @@ int main( void )
         unsigned int best_score = 0;
         std::vector<MahimahiProtobufs::RequestResponse> best_matches;
 
+        /*cout << "HTTP/1.1 500 Internal Server Error" << CRLF;
+        cout << "Content-Type: text/plain" << CRLF << CRLF;
+        cout << "mahimahi mm-webreplay received an exception:" << CRLF << CRLF;
+        std::cout << request_line << std::endl;
+        return EXIT_FAILURE;*/
+
         auto stripped = strip_query(request_line);
-        string hash = to_string(hash32(reinterpret_cast<const uint8_t*>(stripped.c_str()),stripped.size()-1));
+        string hash = to_string(hash32(reinterpret_cast<const uint8_t*>(stripped.c_str()),stripped.size()-1)); //THIS IS A BUG, it should be size(), do not fix due to compat with existing recordings
 
         int num_files = 0;
         for ( const auto & filename : files ) {
@@ -177,8 +198,7 @@ int main( void )
             cout << HTTPResponse( best_matches[0].response() ).str();
             return EXIT_SUCCESS;
         } else {                /* no acceptable matches for request */
-            cout << "HTTP/1.1 404 Not Found" << CRLF;
-            cout << "Content-Type: text/plain" << CRLF << CRLF;
+            cout << "Hash:" << hash << CRLF;
             cout << "replayserver: could not find a match for " << request_line << CRLF;
             cout << "Files considered:  " << num_files << CRLF;
             return EXIT_FAILURE;
