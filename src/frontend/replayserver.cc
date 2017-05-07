@@ -198,6 +198,8 @@ int main( void )
             cout << HTTPResponse( best_matches[0].response() ).str();
             return EXIT_SUCCESS;
         } else {                /* no acceptable matches for request */
+            cout << "HTTP/1.1 404 Not Found" << CRLF;
+            cout << "Content-Type: text/plain" << CRLF << CRLF;
             cout << "Hash:" << hash << CRLF;
             cout << "replayserver: could not find a match for " << request_line << CRLF;
             cout << "Files considered:  " << num_files << CRLF;
