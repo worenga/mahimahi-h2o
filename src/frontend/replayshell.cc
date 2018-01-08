@@ -150,6 +150,9 @@ int main( int argc, char *argv[] )
                 {
                     unique_ip.emplace( address.ip(), 0 );
                 }
+		else if(merge_policy == "same-ip"){
+                    unique_ip.emplace( address.ip(), 0 );
+		}
                 unique_ip_and_port.emplace( address );
 
                 auto request = HTTPRequest( protobuf.request() );
