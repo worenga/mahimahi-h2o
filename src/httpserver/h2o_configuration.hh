@@ -27,7 +27,7 @@ http2-push-preload: ON
 http2-reprioritize-blocking-assets: OFF
 http2-casper: OFF
 http2-idle-timeout: 30
-http2-max-concurrent-requests-per-connection: 2048
+http2-max-concurrent-requests-per-connection: 255
 ### Compression
 #compress: [ gzip ]
 compress: OFF

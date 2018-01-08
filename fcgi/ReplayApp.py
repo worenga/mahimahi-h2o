@@ -169,7 +169,7 @@ class ReplayApp:
                     is_chunked = True
                 else:
                     #Filter out any link header the site might emit.
-                    if key not in ['expires', 'date', 'last-modified','link']:
+                    if key not in ['expires', 'date', 'last-modified','link', 'alt-svc']:
                         hdrlist.append((key.strip(), headers[key]))
                     if key.lower() == 'access-control-allow-origin':
                         corsfound = True
@@ -215,7 +215,7 @@ class ReplayApp:
                                 print 'WILL HINT: ' ,len(self.hint_assets[i]) #//, ('x-extrapush', str(linkstr))
                                 break
 
-            # print "start response! " + environ['REQUEST_URI']
+            print "start response! " + environ['HTTP_HOST'] + " - " + environ['REQUEST_URI']
 
             if is_chunked:
                 # print "will decode chunked"

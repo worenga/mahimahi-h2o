@@ -167,7 +167,7 @@ for(auto & alt_name: alt_names)
 {
     if(alt_name != domain)
     {
-        std::cout << "ALT NAME" << alt_name << std::endl;
+        std::cout << "ALT NAME " << alt_name << std::endl;
         config += "DNS."+std::to_string(i)+"       = "+alt_name+"\n";
         i++;
     }

@@ -57,7 +57,7 @@ int main( int argc, char *argv[] )
         check_requirements( argc, argv );
 
         if ( argc < 3 ) {
-            throw runtime_error( "Usage: " + string( argv[ 0 ] ) + " directory push_strategy_file [command...]" );
+            throw runtime_error( "Usage: " + string( argv[ 0 ] ) + " directory push_strategy_file ca_merge_policy [command...]" );
         }
 
         /* clean directory name */
@@ -82,6 +82,16 @@ int main( int argc, char *argv[] )
             throw runtime_error( string( argv[ 0 ] ) + ": push_strategy_file name must be non-empty" );
         }
 
+        string merge_policy = argv[ 3 ];
+        if ( merge_policy.empty() ) {
+            throw runtime_error( string( argv[ 0 ] ) + ": ca_merge_policy name must be non-empty" );
+        }
+
+        if (merge_policy != "same-ip" && merge_policy != "merge-all")
+        {
+            throw runtime_error( string( argv[ 0 ] ) + ": ca_merge_policy name must be either same-ip or merge-all" );
+        }
+
         /* chdir to result of getcwd just in case */
         SystemCall( "chdir", chdir( working_directory.c_str() ) );
 
@@ -97,11 +107,11 @@ int main( int argc, char *argv[] )
 
         /* what command will we run inside the container? */
         vector< string > command;
-        if ( argc == 3 ) {
+        if ( argc == 4 ) {
             command.push_back( shell_path() );
         } else {
 
-            for ( int i = 3; i < argc; i++ ) {
+            for ( int i = 4; i < argc; i++ ) {
                 command.push_back( argv[ i ] );
             }
         }
@@ -136,7 +146,10 @@ int main( int argc, char *argv[] )
 
                 const Address address( protobuf.ip(), protobuf.port() );
 
-                unique_ip.emplace( address.ip(), 0 );
+                if (merge_policy != "same-ip" && unique_ip.size() < 1)
+                {
+                    unique_ip.emplace( address.ip(), 0 );
+                }
                 unique_ip_and_port.emplace( address );
 
                 auto request = HTTPRequest( protobuf.request() );
@@ -174,49 +187,98 @@ int main( int argc, char *argv[] )
         /* set up web servers */
         vector< WebServer > servers;
         vector< std::unique_ptr<ServerCertificate> > certificates;
-        for ( const auto ip_port : unique_ip_and_port )
+        
+        if(merge_policy == "merge-ip")
         {
-
-            std::string certfile = h2o_ssl_config_certfile;
-            std::string keyfile = h2o_ssl_config_keyfile;
-
-            std::string hostname_found = "";
-            std::set<std::string> alts;
-            //Get Hostnames that have the same ip:
-            for ( const auto mapping : hostname_to_ip )
+            for ( const auto ip_port : unique_ip_and_port )
             {
-                if(ip_port.ip() == mapping.second.ip())
-                {
-                    if(hostname_found == "")
+
+                std::string certfile = h2o_ssl_config_certfile;
+                std::string keyfile = h2o_ssl_config_keyfile;
+
+                std::string hostname_found = "";
+                std::set<std::string> alts;
+                //Get Hostnames that have the same ip:
+                    for ( const auto mapping : hostname_to_ip )
                     {
-                        hostname_found = mapping.first;
+                        
+                        if(ip_port.ip() == mapping.second.ip())
+                        {
+                            if(hostname_found == "")
+                            {
+                                hostname_found = mapping.first;
+                            }
+                            else
+                            {
+                                alts.insert(mapping.first);
+                            }
+                        }
+                    }
+
+                if(hostname_found != "")
+                {
+                    std::unique_ptr<ServerCertificate> p1(new ServerCertificate(hostname_found,alts,caenv));  // p1 owns Foo
+                    certificates.emplace_back(std::move(p1));
+                    keyfile = certificates.back()->privatekey_file->name();
+                    certfile = certificates.back()->certificate_file->name();
+                }
+                else
+                {
+
+                }
+
+                servers.emplace_back( ip_port, working_directory, directory, push_strategy_file, keyfile, certfile, mahimahi_root);
+            }
+        }else{
+            for ( const auto ip_port : unique_ip_and_port )
+            {
+                if(ip_port.ip() == unique_ip.begin()->ip())
+                {
+                    std::string certfile = h2o_ssl_config_certfile;
+                    std::string keyfile = h2o_ssl_config_keyfile;
+
+                    std::string hostname_found = "";
+                    std::set<std::string> alts;
+                    //Get Hostnames that have the same ip:
+                    for ( const auto mapping : hostname_to_ip )
+                    {
+                        if(hostname_found == "")
+                        {
+                            hostname_found = mapping.first;
+                        }
+                        else
+                        {
+                            alts.insert(mapping.first);
+                        }
+                    }
+
+                    if(hostname_found != "")
+                    {
+                        std::unique_ptr<ServerCertificate> p1(new ServerCertificate(hostname_found,alts,caenv));  // p1 owns Foo
+                        certificates.emplace_back(std::move(p1));
+                        keyfile = certificates.back()->privatekey_file->name();
+                        certfile = certificates.back()->certificate_file->name();
                     }
                     else
                     {
-                        alts.insert(mapping.first);
+
                     }
+                    servers.emplace_back( ip_port, working_directory, directory, push_strategy_file, keyfile, certfile, mahimahi_root);
                 }
             }
-
-            if(hostname_found != "")
-            {
-                std::unique_ptr<ServerCertificate> p1(new ServerCertificate(hostname_found,alts,caenv));  // p1 owns Foo
-                certificates.emplace_back(std::move(p1));
-                keyfile = certificates.back()->privatekey_file->name();
-                certfile = certificates.back()->certificate_file->name();
-            }
-            else
-            {
-
-            }
-
-            servers.emplace_back( ip_port, working_directory, directory, push_strategy_file,keyfile, certfile, mahimahi_root);
         }
 
         /* set up DNS server */
         UniqueFile dnsmasq_hosts( "/tmp/replayshell_hosts" );
-        for ( const auto mapping : hostname_to_ip ) {
-            dnsmasq_hosts.write( mapping.second.ip() + " " + mapping.first + "\n" );
+        if(merge_policy == "merge-ip")
+        {
+            for ( const auto mapping : hostname_to_ip ) {
+                dnsmasq_hosts.write( mapping.second.ip() + " " + mapping.first + "\n" );
+            }
+        }else{
+            for ( const auto mapping : hostname_to_ip ) {
+                dnsmasq_hosts.write( unique_ip.begin()->ip() + " " + mapping.first + "\n" );
+            }
         }
 
         /* initialize event loop */
