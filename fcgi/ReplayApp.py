@@ -155,6 +155,7 @@ class ReplayApp:
             # response_code = status_line[1]
 
             status_cleaned = ' '.join(splitted_status[1:])
+            #print status_cleaned
 
             headers = Message(StringIO(headers_alone))
 
@@ -193,7 +194,7 @@ class ReplayApp:
                                 # print asset;
                                 linkstr += '<' + asset + '>; rel=preload'
                             hdrlist.append(('x-extrapush', str(linkstr)))
-                            print 'WILL PUSH: ' ,len(self.push_assets[i]) #//, ('x-extrapush', str(linkstr))
+                            # print 'WILL PUSH: ' ,len(self.push_assets[i]) #//, ('x-extrapush', str(linkstr))
                             break
 
             if not is_push:
@@ -212,14 +213,15 @@ class ReplayApp:
                                     linkstr_to_append = '<'+asset + '>; rel=preload'+as_string+';type="'+self.hint_mimetype[i][j]+'"'
                                     linkstr += linkstr_to_append
                                 hdrlist.append(('link', str(linkstr)))
-                                print 'WILL HINT: ' ,len(self.hint_assets[i]) #//, ('x-extrapush', str(linkstr))
+                                # print 'WILL HINT: ' ,len(self.hint_assets[i]) #//, ('x-extrapush', str(linkstr))
                                 break
 
-            print "start response! " + environ['HTTP_HOST'] + " - " + environ['REQUEST_URI']
+            # print "start response! " + environ['HTTP_HOST'] + " - " + environ['REQUEST_URI']
 
             if is_chunked:
                 # print "will decode chunked"
                 start_response(status_cleaned, hdrlist)
+                # print "chunked"
                 for chunk in decode(StringIO(response_body)):
                     yield str(chunk)
             else:

@@ -150,7 +150,8 @@ int main( int argc, char *argv[] )
                 {
                     unique_ip.emplace( address.ip(), 0 );
                 }
-		else if(merge_policy == "same-ip"){
+		else if(merge_policy == "same-ip")
+		{
                     unique_ip.emplace( address.ip(), 0 );
 		}
                 unique_ip_and_port.emplace( address );
@@ -191,7 +192,7 @@ int main( int argc, char *argv[] )
         vector< WebServer > servers;
         vector< std::unique_ptr<ServerCertificate> > certificates;
         
-        if(merge_policy == "merge-ip")
+        if(merge_policy != "merge-all")
         {
             for ( const auto ip_port : unique_ip_and_port )
             {
@@ -273,7 +274,7 @@ int main( int argc, char *argv[] )
 
         /* set up DNS server */
         UniqueFile dnsmasq_hosts( "/tmp/replayshell_hosts" );
-        if(merge_policy == "merge-ip")
+        if(merge_policy != "merge-all")
         {
             for ( const auto mapping : hostname_to_ip ) {
                 dnsmasq_hosts.write( mapping.second.ip() + " " + mapping.first + "\n" );
