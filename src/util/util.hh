@@ -22,6 +22,8 @@ void prepend_shell_prefix( const std::string & str );
 template <typename T> void zero( T & x ) { memset( &x, 0, sizeof( x ) ); }
 std::string join( const std::vector< std::string > & command );
 std::string get_working_directory( void );
+uint32_t hash32(const uint8_t *x, size_t n);
+std::string strip_query( const std::string & request_line );
 
 class TemporarilyUnprivileged {
 private:

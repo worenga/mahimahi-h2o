@@ -206,6 +206,28 @@ string get_working_directory( void )
     return cwd_ptr.get();
 }
 
+uint32_t hash32(const uint8_t *x, size_t n)
+{
+    uint32_t v = 2166136261;
+    for (size_t i = 0; i < n; i++) {
+        v ^= x[i];
+        v *= 16777619;
+    }
+    return v;
+}
+
+
+string strip_query( const string & request_line )
+{
+    const auto index = request_line.find( "?" );
+    if ( index == string::npos ) {
+        return request_line;
+    } else {
+        return request_line.substr( 0, index );
+    }
+}
+
+
 void adjust_somaxconn(void)
 {
 	FileDescriptor fd( SystemCall( "open", open( "/proc/sys/net/core/somaxconn", O_WRONLY ) ) );

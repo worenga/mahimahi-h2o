@@ -54,16 +54,6 @@ bool header_match( const string & env_var_name,
     return false;
 }
 
-string strip_query( const string & request_line )
-{
-    const auto index = request_line.find( "?" );
-    if ( index == string::npos ) {
-        return request_line;
-    } else {
-        return request_line.substr( 0, index );
-    }
-}
-
 /* compare request_line and certain headers of incoming request and stored request */
 unsigned int match_score( const MahimahiProtobufs::RequestResponse & saved_record,
                           const string & request_line,
@@ -101,7 +91,7 @@ unsigned int match_score( const MahimahiProtobufs::RequestResponse & saved_recor
 
 
     /* match user agent */
-/*    if ( not header_match( "HTTP_USER_AGENT", "User-Agent", saved_request ) ) {
+    /* if ( not header_match( "HTTP_USER_AGENT", "User-Agent", saved_request ) ) {
         return 0;
     }
     */
@@ -122,17 +112,6 @@ unsigned int match_score( const MahimahiProtobufs::RequestResponse & saved_recor
     return max_match;
 }
 
-uint32_t hash32(const uint8_t *x, size_t n)
-{
-    uint32_t v = 2166136261;
-    for (size_t i = 0; i < n; i++) {
-        v ^= x[i];
-        v *= 16777619;
-    }
-    return v;
-}
-
-
 int main( void )
 {
     try {
@@ -152,14 +131,8 @@ int main( void )
         unsigned int best_score = 0;
         std::vector<MahimahiProtobufs::RequestResponse> best_matches;
 
-        /*cout << "HTTP/1.1 500 Internal Server Error" << CRLF;
-        cout << "Content-Type: text/plain" << CRLF << CRLF;
-        cout << "mahimahi mm-webreplay received an exception:" << CRLF << CRLF;
-        std::cout << request_line << std::endl;
-        return EXIT_FAILURE;*/
-
         auto stripped = strip_query(request_line);
-        string hash = to_string(hash32(reinterpret_cast<const uint8_t*>(stripped.c_str()),stripped.size()-1)); //THIS IS A BUG, it should be size(), do not fix due to compat with existing recordings
+        string hash = to_string(hash32(reinterpret_cast<const uint8_t*>(stripped.c_str()),stripped.size()));
 
         int num_files = 0;
         for ( const auto & filename : files ) {
@@ -179,7 +152,10 @@ int main( void )
                 throw runtime_error( filename + ": invalid HTTP request/response" );
             }
 
-            unsigned int score = match_score( current_record, request_line, is_https );
+	    std::string error;
+            unsigned int score = match_score( current_record, request_line, is_https, error);
+	    errors.push_back(error);
+
             if ( score > best_score ) {
                 best_matches.clear();
                 best_matches.push_back(current_record);
@@ -201,6 +177,10 @@ int main( void )
             cout << "HTTP/1.1 404 Not Found" << CRLF;
             cout << "Content-Type: text/plain" << CRLF << CRLF;
             cout << "Hash:" << hash << CRLF;
+            for(auto error : errors)
+            {
+                cout << "Error:" << error << CRLF;
+            }
             cout << "replayserver: could not find a match for " << request_line << CRLF;
             cout << "Files considered:  " << num_files << CRLF;
             return EXIT_FAILURE;

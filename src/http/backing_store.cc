@@ -3,32 +3,12 @@
 #include <iostream>
 #include <string>
 
+#include "util.hh"
 #include "backing_store.hh"
 #include "http_record.pb.h"
 #include "temp_file.hh"
 
 using namespace std;
-
-uint32_t hash32(const uint8_t *x, size_t n)
-{
-    uint32_t v = 2166136261;
-    for (size_t i = 0; i < n; i++) {
-        v ^= x[i];
-        v *= 16777619;
-    }
-    return v;
-}
-
-string strip_query( const string & request_line )
-{
-    const auto index = request_line.find( "?" );
-    if ( index == string::npos ) {
-        return request_line;
-    } else {
-        return request_line.substr( 0, index );
-    }
-}
-
 
 HTTPDiskStore::HTTPDiskStore( const string & record_folder )
     : record_folder_( record_folder ),
@@ -42,7 +22,7 @@ void HTTPDiskStore::save( const HTTPResponse & response, const Address & server_
     /* output file to write current request/response pair protobuf (user has all permissions) */
 
     auto stripped = strip_query(response.request().first_line());
-    string hash = to_string(hash32(reinterpret_cast<const uint8_t*>(stripped.c_str()),stripped.size()-1));
+    string hash = to_string(hash32(reinterpret_cast<const uint8_t*>(stripped.c_str()),stripped.size()));
     UniqueFile file( record_folder_ + hash );
 
 
