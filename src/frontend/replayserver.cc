@@ -57,16 +57,19 @@ bool header_match( const string & env_var_name,
 /* compare request_line and certain headers of incoming request and stored request */
 unsigned int match_score( const MahimahiProtobufs::RequestResponse & saved_record,
                           const string & request_line,
-                          const bool is_https )
+                          const bool is_https,
+			              std::string &error )
 {
     const HTTPRequest saved_request( saved_record.request() );
 
     /* match HTTP/HTTPS */
     if ( is_https and (saved_record.scheme() != MahimahiProtobufs::RequestResponse_Scheme_HTTPS) ) {
+	    error = "schema not matched";
         return 0;
     }
 
     if ( (not is_https) and (saved_record.scheme() != MahimahiProtobufs::RequestResponse_Scheme_HTTP) ) {
+	    error = "schema not matched";
         return 0;
     }
 
@@ -74,16 +77,22 @@ unsigned int match_score( const MahimahiProtobufs::RequestResponse & saved_recor
     if ( saved_request.has_header("Host") )
     {
         if ( not header_match( "HTTP_HOST", "Host", saved_request ) ) {
+            error = "host not matched";
             return 0;
         }
-    }else if ( saved_request.has_header(":authority") )
+    }
+    else if ( saved_request.has_header(":authority"))
     {
         const char * const env_value = getenv( "HTTP_HOST" );
         if (saved_request.get_header_value( ":authority" ) != string( env_value ))
         {
+	        error = std::string("authority not matched ") + env_value + " <-> " +saved_request.get_header_value( ":authority" );
             return 0;
         }
-    }else{
+    }
+    else
+    {
+    	error = "authority, origin or host not set";
         return 0;
     }
     
@@ -98,6 +107,7 @@ unsigned int match_score( const MahimahiProtobufs::RequestResponse & saved_recor
 
     /* must match first line up to "?" at least */
     if ( strip_query( request_line ) != strip_query( saved_request.first_line() ) ) {
+	    error = "prefix_mismatch";
         return 0;
     }
 
@@ -127,6 +137,7 @@ int main( void )
         SystemCall( "chdir", chdir( working_directory.c_str() ) );
 
         const vector< string > files = list_directory_contents( recording_directory );
+        vector< string > errors;
 
         unsigned int best_score = 0;
         std::vector<MahimahiProtobufs::RequestResponse> best_matches;
@@ -152,9 +163,9 @@ int main( void )
                 throw runtime_error( filename + ": invalid HTTP request/response" );
             }
 
-	    std::string error;
+	        std::string error;
             unsigned int score = match_score( current_record, request_line, is_https, error);
-	    errors.push_back(error);
+	        errors.push_back(error);
 
             if ( score > best_score ) {
                 best_matches.clear();
